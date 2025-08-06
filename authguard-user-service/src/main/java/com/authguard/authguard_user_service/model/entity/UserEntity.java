@@ -29,7 +29,7 @@ public class UserEntity {
     @Column(unique = true)
     private String contactNumber;
     @Column(nullable = false)
-    private String passwordHash;
+    private String hashPassword;
     @CreationTimestamp
     private LocalDate createdAt;
     @Column()

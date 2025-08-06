@@ -21,7 +21,8 @@ public class User implements  UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        // throw new UnsupportedOperationException("Not supported yet.");
+        return null;
     }
      @Override
     public String getPassword() {
