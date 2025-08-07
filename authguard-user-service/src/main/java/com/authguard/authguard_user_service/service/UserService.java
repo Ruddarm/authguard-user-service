@@ -1,6 +1,7 @@
 package com.authguard.authguard_user_service.service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.cache.annotation.Cacheable;
@@ -36,19 +37,26 @@ public class UserService implements UserDetailsService {
         user = userRepository.save(user);
         return modelMapper.map(user, UserLoginResponse.class);
     }
-    
 
-   
+    @Cacheable(cacheNames = "logedInUser", key = "#userId")
+    public User loadByUserId(UUID userId) throws ResourceException {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceException("User not found for id : " + userId));
+        return User.builder().username(user.getEmail()).userId(user.getUserId().toString())
+                .firstName(user.getFirstName()).lastName(user.getLastName()).build();
+
+    }
+
     public Optional<UserEntity> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
 
     @Override
-    // @Cacheable(cacheNames = "logedInUser", key = "#username")
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         UserEntity userEntity = findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Username not found : " + username));
         return User.builder().username(username).userId(userEntity.getUserId().toString())
                 .password(userEntity.getHashPassword()).build();
     }
+
 }

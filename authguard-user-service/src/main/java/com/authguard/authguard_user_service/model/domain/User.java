@@ -1,6 +1,8 @@
 package com.authguard.authguard_user_service.model.domain;
 
 import org.springframework.security.core.userdetails.UserDetails;
+
+import java.io.Serializable;
 import java.util.Collection;
 
 import org.springframework.security.core.GrantedAuthority;
@@ -13,7 +15,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class User implements  UserDetails {
+public class User implements  UserDetails, Serializable {
+    private String firstName;
+    private String lastName;
     private String username;
     private String userId;
     private String password;

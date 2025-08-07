@@ -1,10 +1,18 @@
 package com.authguard.authguard_user_service.config;
 
+import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.cache.RedisCacheWriter;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -38,16 +46,17 @@ public class Config {
         return new ProviderManager(List.of(userAuthProvider(clientService)));
     }
 
-    // @Bean
-    // public CacheManager redisChacheMangaer(RedisConnectionFactory
-    // connectionFatory) {
-    // Map<String, RedisCacheConfiguration> cacheMangaer = new HashMap<>();
-    // cacheMangaer.put("logedInUser",
-    // RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(10)).enableTimeToIdle());
-    // return
-    // RedisCacheManager.builder(RedisCacheWriter.nonLockingRedisCacheWriter(connectionFatory))
-    // .cacheDefaults(RedisCacheConfiguration.defaultCacheConfig())
-    // .withInitialCacheConfigurations(cacheMangaer).build();
-    // }
+    @Bean
+    public CacheManager redisChacheMangaer(RedisConnectionFactory connectionFatory) {
+        Map<String, RedisCacheConfiguration> cacheMangaer = new HashMap<>();
+        cacheMangaer.put("logedInUser",
+                RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(10)).enableTimeToIdle());
+        // cacheMangaer.put("AuthorizeCode",RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(3)).enableTimeToIdle());
+        cacheMangaer.put("AuthorizeCode",
+                RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(3)).enableTimeToIdle());
+        return RedisCacheManager.builder(RedisCacheWriter.nonLockingRedisCacheWriter(connectionFatory))
+                .cacheDefaults(RedisCacheConfiguration.defaultCacheConfig())
+                .withInitialCacheConfigurations(cacheMangaer).build();
+    }
 
 }
