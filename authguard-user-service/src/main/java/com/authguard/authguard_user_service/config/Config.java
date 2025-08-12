@@ -13,6 +13,10 @@ import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.cache.RedisCacheWriter;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -20,6 +24,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.authguard.authguard_user_service.service.UserService;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
 public class Config {
@@ -48,15 +55,42 @@ public class Config {
 
     @Bean
     public CacheManager redisChacheMangaer(RedisConnectionFactory connectionFatory) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+        Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(objectMapper, Object.class);
+
+        System.out.println("Inside cachemanger");
+        RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
+                .serializeValuesWith(RedisSerializationContext.SerializationPair
+                        .fromSerializer(serializer));
+
         Map<String, RedisCacheConfiguration> cacheMangaer = new HashMap<>();
         cacheMangaer.put("logedInUser",
-                RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(10)).enableTimeToIdle());
-        // cacheMangaer.put("AuthorizeCode",RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(3)).enableTimeToIdle());
+                RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(10)).enableTimeToIdle()
+                        .serializeValuesWith(RedisSerializationContext.SerializationPair
+                                .fromSerializer(serializer)));
+
         cacheMangaer.put("AuthorizeCode",
-                RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(3)).enableTimeToIdle());
+                RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(3)).enableTimeToIdle()
+                        .serializeValuesWith(RedisSerializationContext.SerializationPair
+                                .fromSerializer(serializer)));
         return RedisCacheManager.builder(RedisCacheWriter.nonLockingRedisCacheWriter(connectionFatory))
-                .cacheDefaults(RedisCacheConfiguration.defaultCacheConfig())
+                .cacheDefaults(defaultConfig)
                 .withInitialCacheConfigurations(cacheMangaer).build();
+    }
+
+    @Bean
+    public RedisTemplate<String, String> redisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, String> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+        // Key Serializer
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
+        // Value Serializer as plain String (JSON string)
+        template.setValueSerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(new StringRedisSerializer());
+        template.afterPropertiesSet();
+        return template;
     }
 
 }

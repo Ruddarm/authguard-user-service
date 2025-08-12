@@ -1,5 +1,6 @@
 package com.authguard.authguard_user_service.service;
 
+import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,6 +18,7 @@ import com.authguard.authguard_user_service.dtos.UserSingupRequest;
 import com.authguard.authguard_user_service.model.domain.User;
 import com.authguard.authguard_user_service.model.entity.UserEntity;
 import com.authguard.authguard_user_service.repository.UserRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 public class UserService implements UserDetailsService {
 
+    private final RedisService redisService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
@@ -38,13 +41,16 @@ public class UserService implements UserDetailsService {
         return modelMapper.map(user, UserLoginResponse.class);
     }
 
-    @Cacheable(cacheNames = "logedInUser", key = "#userId")
-    public User loadByUserId(UUID userId) throws ResourceException {
-        UserEntity user = userRepository.findById(userId)
+    public User loadByUserId(UUID userId) throws ResourceException, JsonProcessingException {
+        User user = redisService.getFromCache("logedInUser::" + userId, User.class);
+        if (user != null)
+            return user;
+        UserEntity userEntity = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceException("User not found for id : " + userId));
-        return User.builder().username(user.getEmail()).userId(user.getUserId().toString())
-                .firstName(user.getFirstName()).lastName(user.getLastName()).build();
-
+        user = User.builder().username(userEntity.getEmail()).userId(userEntity.getUserId().toString())
+                .firstName(userEntity.getFirstName()).lastName(userEntity.getLastName()).build();
+        redisService.saveToCache("logedInUser::" + user.getUserId(), user, Duration.ofMinutes(10));
+        return user;
     }
 
     public Optional<UserEntity> findByEmail(String email) {

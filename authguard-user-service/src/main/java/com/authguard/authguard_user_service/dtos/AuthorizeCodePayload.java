@@ -9,7 +9,7 @@ import lombok.Data;
 @Builder
 @Data
 public class AuthorizeCodePayload implements  Serializable {
-    private UUID userID;
+    private UUID userId;
     private String client_Id;
     private UUID appUserLinkId;
     private String nonce;
