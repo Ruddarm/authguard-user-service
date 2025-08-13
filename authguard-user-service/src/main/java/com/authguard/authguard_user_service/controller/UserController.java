@@ -3,9 +3,12 @@ package com.authguard.authguard_user_service.controller;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,7 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.authguard.authguard_user_service.Exception.ResourceException;
 import com.authguard.authguard_user_service.dtos.ClientAppRequest;
+import com.authguard.authguard_user_service.dtos.UserResponse;
 import com.authguard.authguard_user_service.service.AuthService;
+import com.authguard.authguard_user_service.service.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import jakarta.validation.Valid;
@@ -24,10 +29,18 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UserController {
     private final AuthService authService;
+    private final ModelMapper modelMapper;
+    private final UserService userService;
 
     @GetMapping("/Username")
     public String getName() {
         return "Name is Fuck Man";
+    }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<UserResponse> getMethodName(@PathVariable UUID userId)
+            throws JsonProcessingException, ResourceException {
+        return ResponseEntity.ok(modelMapper.map(userService.loadByUserId(userId), UserResponse.class));
     }
 
     @PostMapping("/oauth2/code")

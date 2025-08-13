@@ -14,6 +14,7 @@ import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.cache.RedisCacheWriter;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -59,23 +60,28 @@ public class Config {
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
         Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(objectMapper, Object.class);
 
-        System.out.println("Inside cachemanger");
-        RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
-                .serializeValuesWith(RedisSerializationContext.SerializationPair
-                        .fromSerializer(serializer));
+        // System.out.println("Inside cachemanger");
+        // RedisCacheConfiguration defaultConfig =
+        // RedisCacheConfiguration.defaultCacheConfig()
+        // .serializeValuesWith(RedisSerializationContext.SerializationPair
+        // .fromSerializer(serializer));
+        RedisCacheConfiguration userCacheConfig = RedisCacheConfiguration
+                .defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(10))
+                .enableTimeToIdle()
+                .serializeValuesWith(
+                        RedisSerializationContext.SerializationPair
+                                .fromSerializer(new GenericJackson2JsonRedisSerializer()));
 
         Map<String, RedisCacheConfiguration> cacheMangaer = new HashMap<>();
-        cacheMangaer.put("logedInUser",
-                RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(10)).enableTimeToIdle()
-                        .serializeValuesWith(RedisSerializationContext.SerializationPair
-                                .fromSerializer(serializer)));
+        cacheMangaer.put("logedInUser", userCacheConfig);
 
         cacheMangaer.put("AuthorizeCode",
                 RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(3)).enableTimeToIdle()
                         .serializeValuesWith(RedisSerializationContext.SerializationPair
                                 .fromSerializer(serializer)));
         return RedisCacheManager.builder(RedisCacheWriter.nonLockingRedisCacheWriter(connectionFatory))
-                .cacheDefaults(defaultConfig)
+                .cacheDefaults(RedisCacheConfiguration.defaultCacheConfig())
                 .withInitialCacheConfigurations(cacheMangaer).build();
     }
 

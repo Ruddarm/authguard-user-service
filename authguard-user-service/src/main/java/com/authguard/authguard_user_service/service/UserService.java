@@ -41,15 +41,12 @@ public class UserService implements UserDetailsService {
         return modelMapper.map(user, UserLoginResponse.class);
     }
 
+    @Cacheable(cacheNames="logedInUser" ,key="#userId")
     public User loadByUserId(UUID userId) throws ResourceException, JsonProcessingException {
-        User user = redisService.getFromCache("logedInUser::" + userId, User.class);
-        if (user != null)
-            return user;
         UserEntity userEntity = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceException("User not found for id : " + userId));
-        user = User.builder().username(userEntity.getEmail()).userId(userEntity.getUserId().toString())
+        User user = User.builder().username(userEntity.getEmail()).userId(userEntity.getUserId().toString())
                 .firstName(userEntity.getFirstName()).lastName(userEntity.getLastName()).build();
-        redisService.saveToCache("logedInUser::" + user.getUserId(), user, Duration.ofMinutes(10));
         return user;
     }
 
