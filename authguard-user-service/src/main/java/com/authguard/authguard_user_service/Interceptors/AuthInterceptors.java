@@ -21,6 +21,8 @@ public class AuthInterceptors implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
         String uri = request.getRequestURI();
+        if (request.getRequestURI().startsWith("/service"))
+            return true;
         if (uri.startsWith("/auth")) {
             return true;
         }
