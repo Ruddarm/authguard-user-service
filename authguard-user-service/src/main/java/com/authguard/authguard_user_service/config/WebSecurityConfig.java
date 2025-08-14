@@ -30,9 +30,8 @@ public class WebSecurityConfig {
     @Bean
     @Order(1)
     SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity
+        disableCsrfAndCors(httpSecurity)
                 .securityMatcher("/user/**")
-                .cors(corsCustomizer -> corsCustomizer.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests((auth) -> auth.requestMatchers("/user/**", "/auth/user/**").permitAll()
                         .anyRequest().authenticated())
                 .csrf(crsfConfig -> crsfConfig.disable());

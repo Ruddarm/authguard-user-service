@@ -8,6 +8,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.Date;
+import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
@@ -46,15 +47,22 @@ public class JwtService {
         return Keys.hmacShaKeyFor(SecretJwtKey.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String createAccessToken(User client) {
-        return Jwts.builder().subject(client.getUserId().toString()).claim("userType", "Client")
-                .claim("email", client.getUsername()).issuedAt(new Date())
+    public String createAccessToken(User user) {
+        return Jwts.builder().subject(user.getUserId().toString()).claim("userType", "Client")
+                .claim("email", user.getUsername()).issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 3)).signWith(generateSecretKey())
                 .compact();
     }
 
-    public String createRefreshToken(User client) {
-        return Jwts.builder().subject(client.getUserId().toString()).claim("email", client.getUsername())
+    /*
+     * Create refresh token
+     * 
+     * @param User client
+     * 
+     * @return refresh token of type String
+     */
+    public String createRefreshToken(User user) {
+        return Jwts.builder().subject(user.getUserId()).claim("email", user.getUsername())
                 .issuedAt(new Date()).expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 7))
                 .signWith(generateSecretKey()).compact();
     }
@@ -83,4 +91,28 @@ public class JwtService {
         Claims claims = verifyServiceToken(token);
         return claims.getSubject();
     }
+    /*
+     * Extract claims and very token
+     * 
+     */
+
+    public Claims getClaims(String token) {
+        return Jwts.parser().verifyWith(generateSecretKey()).build().parseSignedClaims(token).getPayload();
+    }
+
+    /*
+     * 
+     * extract user id form the given code.
+     * 
+     */
+    public UUID generateUserIdFromToken(String token) {
+        Claims claims = getClaims(token);
+        String userIdString = claims.getSubject(); // Assuming you're storing userId in subject
+        try {
+            return UUID.fromString(userIdString);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid UUID format in token");
+        }
+    }
+
 }
