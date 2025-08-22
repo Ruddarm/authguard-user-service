@@ -34,7 +34,7 @@ public class UserController {
 
     @GetMapping("/Username")
     public String getName() {
-        return "Name is Fuck Man";
+        return "user name";
     }
 
     @GetMapping("/{userId}")
