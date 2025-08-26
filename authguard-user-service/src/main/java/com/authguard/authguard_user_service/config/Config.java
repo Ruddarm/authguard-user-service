@@ -29,6 +29,10 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import feign.Capability;
+import feign.micrometer.MicrometerCapability;
+import io.micrometer.core.instrument.MeterRegistry;
+
 @Configuration
 public class Config {
 
@@ -99,4 +103,8 @@ public class Config {
         return template;
     }
 
+    @Bean
+    public Capability capablility(final MeterRegistry registry){
+        return new MicrometerCapability(registry);
+    }
 }
