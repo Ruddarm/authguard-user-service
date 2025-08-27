@@ -33,7 +33,7 @@ public class UserService implements UserDetailsService {
 
     public UserLoginResponse createUser(UserSingupRequest singupRequest) throws ResourceException {
         if (userRepository.existsByEmail(singupRequest.getEmail())) {
-            throw new ResourceException("email already exist");
+            throw new ResourceException("email alredy exist");
         }
         UserEntity user = modelMapper.map(singupRequest, UserEntity.class);
         user.setHashPassword(passwordEncoder.encode(singupRequest.getPassword()));
