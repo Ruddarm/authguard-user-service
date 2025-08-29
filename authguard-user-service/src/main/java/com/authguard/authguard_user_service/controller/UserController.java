@@ -1,3 +1,4 @@
+
 package com.authguard.authguard_user_service.controller;
 
 import java.net.URI;
@@ -14,7 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.authguard.authguard_user_service.Exception.ResourceException;
+import com
+.authguard.authguard_user_service.Exception.ResourceException;
 import com.authguard.authguard_user_service.dtos.ClientAppRequest;
 import com.authguard.authguard_user_service.dtos.UserResponse;
 import com.authguard.authguard_user_service.service.AuthService;

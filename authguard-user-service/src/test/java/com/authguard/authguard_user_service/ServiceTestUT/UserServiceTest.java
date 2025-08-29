@@ -1,4 +1,4 @@
-package com.authguard.authguard_user_service.ServiceTest;
+package com.authguard.authguard_user_service.ServiceTestUT;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -10,11 +10,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.authguard.authguard_user_service.Exception.ResourceException;
@@ -56,11 +60,14 @@ public class UserServiceTest {
                 UserEntity stubedUserEntity = modelMapper.map(singUpRequest, UserEntity.class);
                 when(userRepository.save(any(UserEntity.class)))
                                 .thenReturn(stubedUserEntity);
+
                 UserLoginResponse createdUser = userService.createUser(singUpRequest);
-                Assertions.assertThat(createdUser)
+                Assertions
+                                .assertThat(createdUser)
                                 .isNotNull()
                                 .isInstanceOf(UserLoginResponse.class);
-                Assertions.assertThat(createdUser.getEmail())
+                Assertions
+                                .assertThat(createdUser.getEmail())
                                 .isEqualTo(singUpRequest.getEmail());
         }
 
@@ -74,9 +81,11 @@ public class UserServiceTest {
                 UserEntity stubedUserEntity = modelMapper.map(singUpRequest, UserEntity.class);
                 when(userRepository.existsByEmail(anyString()))
                                 .thenReturn(true);
-                Assertions.assertThatThrownBy(() -> userService.createUser(singUpRequest))
+                Assertions
+                                .assertThatThrownBy(() -> userService.createUser(singUpRequest))
                                 .isInstanceOf(ResourceException.class)
                                 .hasMessage("email alredy exist");
+                verify(userRepository, never()).save(any());
         }
 
         @Test
@@ -88,9 +97,10 @@ public class UserServiceTest {
                                 .lastName("doe")
                                 .userId(userId)
                                 .build();
-                when(userRepository.findById(userId))
+                when(userRepository.findById(any(UUID.class)))
                                 .thenReturn(Optional.of(stubedUser));
-                Assertions.assertThat(userService.loadByUserId(userId))
+                Assertions
+                                .assertThat(userService.loadByUserId(userId))
                                 .isNotNull()
                                 .isInstanceOf(User.class);
         }
@@ -105,7 +115,7 @@ public class UserServiceTest {
                                 .email(username)
                                 .hashPassword("securedPaswd")
                                 .build();
-                when(userRepository.findByEmail(username))
+                when(userRepository.findByEmail(anyString()))
                                 .thenReturn(Optional.of(userEntity));
                 UserDetails userdetails = userService.loadUserByUsername(username);
                 Assertions
@@ -118,6 +128,15 @@ public class UserServiceTest {
                 Assertions
                                 .assertThat(userdetails.getPassword())
                                 .isEqualTo(userEntity.getHashPassword());
+        }
+
+        @Test
+        public void testLoadUserByUsername_whenUserNameIsInvalid() {
+                when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+                Assertions
+                                .assertThatThrownBy(() -> userService.loadUserByUsername("testing@gmail.com"))
+                                .isInstanceOf(UsernameNotFoundException.class)
+                                .hasMessage("Username not found : testing@gmail.com");
 
         }
 

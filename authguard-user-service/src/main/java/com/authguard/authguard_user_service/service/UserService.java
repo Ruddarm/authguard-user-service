@@ -26,7 +26,6 @@ import lombok.RequiredArgsConstructor;
 @Service
 public class UserService implements UserDetailsService {
 
-    private final RedisService redisService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;

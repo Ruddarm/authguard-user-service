@@ -40,12 +40,11 @@ public class UserAuthController {
     @PostMapping("/signup")
     public ResponseEntity<UserLoginResponse> signupUser(@Valid @RequestBody UserSingupRequest userSingupRequest)
             throws ResourceException {
-
         return new ResponseEntity<>(userService.createUser(userSingupRequest), HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserLoginResponse> cliengLoging(@Valid @RequestBody UserLoginRequest loginRequest,
+    public ResponseEntity<UserLoginResponse> userLogin(@Valid @RequestBody UserLoginRequest loginRequest,
             HttpServletRequest request, HttpServletResponse response) {
         String[] data = authService.validateClient(loginRequest);
         String cookie = String.format(
